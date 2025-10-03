@@ -7,21 +7,18 @@
  * - Document structure (not just plain text)
  * - Undo/redo history
  * - Extensibility through plugins
- *
  * Think of ProseMirror like a more powerful <textarea>:
  * - <textarea>: plain text only
  * - ProseMirror: structured documents with formatting, history, etc.
  */
 
+import { EditorView, Decoration, DecorationSet } from "prosemirror-view";
 import { useEffect, useRef, useState } from "react";
-import { EditorState } from "prosemirror-state";
-import { EditorView } from "prosemirror-view";
 import { Schema, DOMParser } from "prosemirror-model";
 import { schema as basicSchema } from "prosemirror-schema-basic";
 import { keymap } from "prosemirror-keymap";
 import { history, undo, redo } from "prosemirror-history";
-import { Plugin } from "prosemirror-state";
-import { Decoration, DecorationSet } from "prosemirror-view";
+import { EditorState, Plugin } from "prosemirror-state";
 import "./Editor.css";
 
 /**
@@ -71,35 +68,10 @@ export function Editor({
       marks: basicSchema.spec.marks,
     });
 
-    // Create placeholder plugin
-    const placeholderPlugin = new Plugin({
-      props: {
-        decorations(state) {
-          const doc = state.doc;
-          if (
-            doc.childCount === 1 &&
-            doc.firstChild.isTextblock &&
-            doc.firstChild.content.size === 0
-          ) {
-            const placeholder = document.createElement("div");
-            placeholder.className = "placeholder";
-            placeholder.textContent = "Start typing here, or press Ctrl+K (⌘+K on Mac) to continue writing with AI...";
-            
-            return DecorationSet.create(doc, [
-              Decoration.widget(1, placeholder, { side: 1 })
-            ]);
-          }
-          return DecorationSet.empty;
-        }
-      }
-    });
-
     // STEP 2: Create initial editor state
     const state = EditorState.create({
       // Start with an empty document
-      doc: schema.node("doc", null, [
-        schema.node("paragraph")
-      ]),
+      doc: schema.node("doc", null, [schema.node("paragraph")]),
 
       // Plugins add functionality to the editor
       plugins: [
@@ -107,7 +79,112 @@ export function Editor({
         history(),
 
         // Placeholder plugin
-        placeholderPlugin,
+        // Note: Placeholder functionality is now handled by CSS styling
+
+        // Inline continue button plugin
+        new Plugin({
+          spec: {
+            isGenerating: isGenerating,
+            machineState: machineState,
+            onContinue: onContinue,
+          },
+          props: {
+            decorations(state) {
+              const decorations = [];
+              const doc = state.doc;
+
+              // Get the current state from plugin spec
+              const isGenerating = this.spec.isGenerating || false;
+              const machineState = this.spec.machineState;
+              const onContinue = this.spec.onContinue;
+
+              // Only show the inline button when:
+              // 1. Not currently generating
+              // 2. Not in review state
+              // 3. Document has content
+              // 4. Selection is collapsed (just a cursor, not a selection)
+              // 5. Cursor is at the end of a text block
+              if (
+                !isGenerating &&
+                machineState &&
+                !machineState.matches("review") &&
+                doc.content.size > 0
+              ) {
+                const selection = state.selection;
+
+                if (
+                  selection.empty &&
+                  selection.$from.parent.isTextblock &&
+                  selection.$from.parentOffset ===
+                    selection.$from.parent.content.size
+                ) {
+                  const continueButton = document.createElement("button");
+                  continueButton.className = "inline-continue-btn";
+                  continueButton.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="m9 18 6-6-6-6"/>
+                    </svg>
+                    Continue
+                  `;
+                  continueButton.onclick = (e) => {
+                    e.preventDefault();
+                    onContinue(selection.to);
+                  };
+
+                  decorations.push(
+                    Decoration.widget(selection.to, continueButton, {
+                      side: 1,
+                      key: "inline-continue",
+                    })
+                  );
+                }
+              }
+
+              return DecorationSet.create(doc, decorations);
+            },
+          },
+        }),
+
+        // Keyboard shortcut tooltip plugin
+        new Plugin({
+          props: {
+            decorations(state) {
+              const decorations = [];
+              const doc = state.doc;
+
+              // Show tooltip when editor has content and cursor is at end of text
+              if (doc.content.size > 0 && !isGenerating) {
+                const selection = state.selection;
+
+                // Only show when cursor is at the end of a text block
+                if (
+                  selection.empty &&
+                  selection.$from.parent.isTextblock &&
+                  selection.$from.parentOffset ===
+                    selection.$from.parent.content.size
+                ) {
+                  const tooltip = document.createElement("div");
+                  tooltip.className = "keyboard-shortcut-tooltip";
+                  tooltip.innerHTML = `
+                    <kbd class="shortcut-key">Ctrl</kbd> +
+                    <kbd class="shortcut-key">K</kbd>
+                    <span class="tooltip-text">Continue writing with AI</span>
+                  `;
+
+                  // Position right after the cursor
+                  decorations.push(
+                    Decoration.widget(selection.to, tooltip, {
+                      side: 1,
+                      key: "keyboard-tooltip",
+                    })
+                  );
+                }
+              }
+
+              return DecorationSet.create(doc, decorations);
+            },
+          },
+        }),
 
         // Keymap plugin handles keyboard shortcuts
         keymap({
@@ -204,7 +281,7 @@ export function Editor({
       from: from,
       to: to,
       length: generatedContent.length + 1, // Include the space
-      insertPosition: cursorPos
+      insertPosition: cursorPos,
     });
 
     // Add a custom attribute to mark this as AI-generated
@@ -233,7 +310,7 @@ export function Editor({
       viewRef.current
     ) {
       isDiscardingRef.current = true;
-      console.log('🔄 Discarding AI content using undo');
+      console.log("🔄 Discarding AI content using undo");
 
       try {
         const view = viewRef.current;
@@ -246,17 +323,16 @@ export function Editor({
 
         // Notify the state machine that we've handled the discard
         if (send) {
-          send({ type: 'DISCARD_HANDLED' });
-          console.log('✅ Discard completed using undo');
+          send({ type: "DISCARD_HANDLED" });
+          console.log("✅ Discard completed using undo");
         }
       } catch (error) {
-        console.error('Error during discard:', error);
+        console.error("Error during discard:", error);
       } finally {
         isDiscardingRef.current = false;
       }
     }
   }, [machineState?.context?.shouldDiscardContent, send]);
-
 
   /**
    * EFFECT 4: Handle accept content - remove highlighting from AI-generated text
@@ -264,33 +340,33 @@ export function Editor({
    */
   useEffect(() => {
     if (
-      machineState?.context?.shouldAcceptContent && 
-      aiContentInfo && 
+      machineState?.context?.shouldAcceptContent &&
+      aiContentInfo &&
       viewRef.current
     ) {
-      console.log('✅ Accepting AI content, removing highlighting');
-      
+      console.log("✅ Accepting AI content, removing highlighting");
+
       const view = viewRef.current;
       const state = view.state;
-      
+
       // Create a transaction to remove the highlighting (em mark) from AI content
       const transaction = state.tr.removeMark(
-        aiContentInfo.from, 
-        aiContentInfo.to, 
+        aiContentInfo.from,
+        aiContentInfo.to,
         state.schema.marks.em
       );
-      
+
       // Apply the transaction
       view.dispatch(transaction);
-      
+
       // Clear the AI content info since it's now accepted
       setAiContentInfo(null);
       setHasInsertedContent(false);
-      
+
       // Reset the accept flag by sending an event
       if (send) {
-        send({ type: 'ACCEPT_HANDLED' });
-        console.log('✅ Accept completed, highlighting removed');
+        send({ type: "ACCEPT_HANDLED" });
+        console.log("✅ Accept completed, highlighting removed");
       }
     }
   }, [machineState?.context?.shouldAcceptContent, aiContentInfo, send]);

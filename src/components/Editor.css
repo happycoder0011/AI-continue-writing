@@ -121,13 +121,59 @@
   font-weight: 500;
 }
 
-/* Placeholder widget styling */
-.placeholder {
-  color: #9ca3af;
-  font-style: italic;
+/* Keyboard shortcut tooltip styling */
+.keyboard-shortcut-tooltip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(99, 102, 241, 0.9);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  margin-left: 8px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  animation: tooltip-fade-in 0.3s ease-out;
   pointer-events: none;
   user-select: none;
-  position: absolute;
-  top: 0;
-  left: 0;
+}
+
+.shortcut-key {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 10px;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.tooltip-text {
+  opacity: 0.9;
+  font-style: italic;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hide tooltip when editor loses focus or when generating */
+.ProseMirror:not(:focus) .keyboard-shortcut-tooltip,
+.ProseMirror.generating .keyboard-shortcut-tooltip {
+  display: none;
+}
+
+/* Ensure tooltip doesn't interfere with text selection */
+.ProseMirror .keyboard-shortcut-tooltip {
+  position: relative;
+  z-index: 10;
 }
