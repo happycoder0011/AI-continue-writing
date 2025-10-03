@@ -44,7 +44,7 @@ function App() {
   const [state, send] = useMachine(editorMachine);
 
   // Debug: Expose state machine to window for manual testing
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     window.debugMachine = { state, send };
   }
 
@@ -54,8 +54,7 @@ function App() {
    * Before allowing AI features, verify API key is configured
    */
   const apiKeyConfigured = hasValidAPIKey();
-  
-  
+
   /**
    * STEP 3: Define Event Handlers
    *
@@ -68,9 +67,6 @@ function App() {
    * @param {number} cursorPosition - Where to insert AI content
    */
   const handleContinue = (cursorPosition) => {
-    
-    
-    
     // Check if API key is configured
     if (!apiKeyConfigured) {
       alert(
@@ -83,16 +79,14 @@ function App() {
 
     // Send event to state machine
     // The machine will transition to 'generating' state
-    
+
     send({
       type: "CONTINUE_CLICK",
       cursorPosition: cursorPosition || 0,
     });
-    
+
     // Log state after send (this might still show old state due to async nature)
-    setTimeout(() => {
-      
-    }, 100);
+    setTimeout(() => {}, 100);
   };
 
   /**
@@ -116,7 +110,6 @@ function App() {
     // Machine will transition from 'review' to 'idle'
     send({ type: "USER_ACCEPT" });
   };
-
 
   /**
    * Handle user discarding session
@@ -156,15 +149,6 @@ function App() {
     <Theme appearance="light" accentColor="indigo" radius="medium">
       <div className="app-container">
         {/* 
-          HEADER
-          Shows app title and description
-        */}
-        <header className="app-header">
-          <h1>AI Writing Assistant</h1>
-          <p>Start typing or press Ctrl+K (⌘+K on Mac) to continue with AI</p>
-        </header>
-
-        {/* 
           TOOLBAR
           Contains the "Continue Writing" button
         */}
@@ -194,10 +178,7 @@ function App() {
           Provides Accept/Discard options
         */}
         {isReview && (
-          <AIToolbar
-            onAccept={handleAccept}
-            onDiscard={handleDiscard}
-          />
+          <AIToolbar onAccept={handleAccept} onDiscard={handleDiscard} />
         )}
 
         {/* 
