@@ -47,7 +47,7 @@ export async function generateAIContent(documentText, cursorPosition) {
   const useMockMode = !import.meta.env.VITE_OPENAI_API_KEY || import.meta.env.VITE_USE_MOCK_AI === 'true';
   
   if (useMockMode) {
-    console.log('🤖 Using mock AI service (no API key or mock mode enabled)');
+    
     return generateMockAIContent(documentText, cursorPosition);
   }
 
@@ -108,11 +108,11 @@ Do not repeat the existing text.`;
     
   } catch (error) {
     // STEP 5: Handle errors gracefully
-    console.error('AI generation error:', error);
+    
     
     // If quota exceeded, fall back to mock
     if (error.status === 429 && error.error?.code === 'insufficient_quota') {
-      console.log('🤖 Quota exceeded, falling back to mock AI');
+      
       return generateMockAIContent(documentText, cursorPosition);
     }
     
@@ -215,8 +215,8 @@ export function hasValidAPIKey() {
  * // Generate content
  * try {
  *   const text = await generateAIContent('Once upon a time', 17);
- *   console.log('Generated:', text);
+ *   
  * } catch (error) {
- *   console.error('Error:', error.message);
+ *   
  * }
  */

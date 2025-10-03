@@ -223,20 +223,20 @@ export const editorMachine = createMachine(
       generateContent: async (context) => {
         try {
           // Extract text from editor state
-          console.log("🔍 generateContent service started with context:", context);
+          
           const documentText = context.editorState?.doc?.textContent || "";
           const cursorPos = context.cursorPosition;
-          console.log("📝 Document text:", documentText);
-          console.log("📍 Cursor position:", cursorPos);
+          
+          
           
           // Call our AI service (defined in aiService.js)
-          console.log("🤖 Calling generateAIContent...");
+          
           const generatedText = await generateAIContent(documentText, cursorPos);
-          console.log("✅ AI generation successful:", generatedText);
+          
           
           return generatedText;
         } catch (error) {
-          console.error("❌ Error in generateContent service:", error);
+          
           throw error; // Re-throw to trigger onError transition
         }
       }

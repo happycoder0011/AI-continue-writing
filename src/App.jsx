@@ -54,8 +54,8 @@ function App() {
    * Before allowing AI features, verify API key is configured
    */
   const apiKeyConfigured = hasValidAPIKey();
-  console.log("🔑 API Key configured:", apiKeyConfigured);
-  console.log("🔑 API Key value:", import.meta.env.VITE_OPENAI_API_KEY ? "Present" : "Missing");
+  
+  
   /**
    * STEP 3: Define Event Handlers
    *
@@ -68,8 +68,8 @@ function App() {
    * @param {number} cursorPosition - Where to insert AI content
    */
   const handleContinue = (cursorPosition) => {
-    console.log('🚀 handleContinue called with cursorPosition:', cursorPosition);
-    console.log('🔍 Current state before send:', state.value);
+    
+    
     
     // Check if API key is configured
     if (!apiKeyConfigured) {
@@ -83,7 +83,7 @@ function App() {
 
     // Send event to state machine
     // The machine will transition to 'generating' state
-    console.log('📤 Sending CONTINUE_CLICK event');
+    
     send({
       type: "CONTINUE_CLICK",
       cursorPosition: cursorPosition || 0,
@@ -91,7 +91,7 @@ function App() {
     
     // Log state after send (this might still show old state due to async nature)
     setTimeout(() => {
-      console.log('🔍 Current state after send:', state.value);
+      
     }, 100);
   };
 

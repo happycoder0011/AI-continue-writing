@@ -310,7 +310,7 @@ export function Editor({
       viewRef.current
     ) {
       isDiscardingRef.current = true;
-      console.log("🔄 Discarding AI content using undo");
+      
 
       try {
         const view = viewRef.current;
@@ -323,17 +323,16 @@ export function Editor({
 
         // Notify the state machine that we've handled the discard
         if (send) {
-          send({ type: "DISCARD_HANDLED" });
-          console.log("✅ Discard completed using undo");
+          send({ type: 'DISCARD_HANDLED' });
+          
         }
       } catch (error) {
-        console.error("Error during discard:", error);
+        
       } finally {
         isDiscardingRef.current = false;
       }
     }
   }, [machineState?.context?.shouldDiscardContent, send]);
-
   /**
    * EFFECT 4: Handle accept content - remove highlighting from AI-generated text
    * This runs when the shouldAcceptContent flag is set to true
@@ -344,7 +343,7 @@ export function Editor({
       aiContentInfo &&
       viewRef.current
     ) {
-      console.log("✅ Accepting AI content, removing highlighting");
+      
 
       const view = viewRef.current;
       const state = view.state;
@@ -366,13 +365,13 @@ export function Editor({
       // Reset the accept flag by sending an event
       if (send) {
         send({ type: "ACCEPT_HANDLED" });
-        console.log("✅ Accept completed, highlighting removed");
+        
       }
     }
   }, [machineState?.context?.shouldAcceptContent, aiContentInfo, send]);
 
   /**
-   * EFFECT 5: Reset insertion flag when leaving review state
+   * EFFECT 7: Reset discard flag when leaving review state
    * This allows new AI generations to be inserted
    */
   useEffect(() => {
