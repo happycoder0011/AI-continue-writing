@@ -2,6 +2,8 @@
 
 An intelligent writing assistant that uses AI to continue your text seamlessly. Built with React, XState, ProseMirror, and Radix UI.
 
+<img width="2560" height="1370" alt="image" src="https://github.com/user-attachments/assets/fc7a579b-cbc8-473c-a0f4-ca80dc61b2e9" />
+
 ## Features
 
 - ✍️ **AI-Powered Writing**: Continue your text with AI-generated content
